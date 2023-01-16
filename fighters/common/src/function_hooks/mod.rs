@@ -142,12 +142,6 @@ unsafe fn battleobject__call_update_movement_stop(ctx: &skyline::hooks::InlineCt
 unsafe fn run_lua_status_hook(ctx: &skyline::hooks::InlineCtx) {
     let boma = *ctx.registers[22].x.as_ref() as *mut BattleObjectModuleAccessor;
 
-    /*let slow_num = *((utils::singletons::BattleObjectSlow() as u64) as *mut u64);
-    let slow_bool = *(((utils::singletons::BattleObjectSlow() as u64) + 2) as *mut bool);
-    if slow_bool && slow_num != 2 {
-        println!("slow?");
-    }*/
-
     if (*boma).is_fighter()
     && StatusModule::prev_situation_kind(boma) == *SITUATION_KIND_AIR
     && StatusModule::situation_kind(boma) == *SITUATION_KIND_GROUND
@@ -246,23 +240,6 @@ unsafe fn run_lua_status_hook(ctx: &skyline::hooks::InlineCtx) {
     }
 }
 
-#[skyline::hook(offset = 0x479380)]
-unsafe fn kinetic_module__update_energy(kinetic_module: u64, arg2: u64) {
-    let boma = *(kinetic_module as *mut *mut BattleObjectModuleAccessor).add(1);
-    if VarModule::has_var_module((*boma).object()) && VarModule::is_flag((*boma).object(), vars::common::instance::IGNORE_ENERGY_UPDATE) {
-        VarModule::off_flag((*boma).object(), vars::common::instance::IGNORE_ENERGY_UPDATE);
-        return;
-    }
-    if VarModule::has_var_module((*boma).object()) { VarModule::off_flag((*boma).object(), vars::common::instance::IGNORE_ENERGY_UPDATE); }
-    call_original!(kinetic_module, arg2);
-}
-
-#[skyline::hook(offset = 0x6cdc40)]
-unsafe fn kinetic_module__reset_energy(kinetic_module: u64, arg2: u64, boma: &mut BattleObjectModuleAccessor) {
-    if VarModule::has_var_module(boma.object()) { VarModule::on_flag(boma.object(), vars::common::instance::IGNORE_ENERGY_UPDATE); }
-    call_original!(kinetic_module, arg2, boma)
-}
-
 pub fn install() {
     energy::install();
     effect::install();
@@ -297,7 +274,7 @@ pub fn install() {
         skyline::patching::Patch::in_text(0x3e6ce8).data(0x14000012u32);
         
         // Stubs MAIN status execution functions
-        // These functions are run separately in run_lua_status_hook
+        // These functions are run conditionally in run_lua_status_hook
         skyline::patching::Patch::in_text(0x3a8518).nop();
         skyline::patching::Patch::in_text(0x3a8528).nop();
         skyline::patching::Patch::in_text(0x3a8540).nop();
@@ -312,7 +289,5 @@ pub fn install() {
         battleobject__call_update_movement,
         battleobject__call_update_movement_stop,
         run_lua_status_hook,
-        kinetic_module__update_energy,
-        kinetic_module__reset_energy
     );
 }

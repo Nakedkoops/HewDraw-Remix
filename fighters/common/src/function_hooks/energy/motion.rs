@@ -265,10 +265,8 @@ unsafe fn motion_update(energy: &mut FighterKineticEnergyMotion, boma: &mut Batt
     // the following flag is set for the same reset types mentioned in the above LR check, except for AirTransAngleSuperJumpPunch
     energy.active_flag = false;
 
-    if reset_type.is_ground() && !energy.update_flag {
-        if move_speed.x.abs() < 0.1 {
-            move_speed.x = energy.prev_speed.x;
-        }
+    if !energy.update_flag {
+        move_speed.x = energy.prev_speed.x;
     }
 
     let speed = match reset_type {
@@ -327,7 +325,6 @@ unsafe fn motion_update(energy: &mut FighterKineticEnergyMotion, boma: &mut Batt
 
         // This is the most complex (aside from cliff stuff) and it appears to adjust your momentum depending on where you are holding on the stick
         // It looks like it can change variadically throughout the animation, which is most likely unique for these kinds of moves
-        // This is only for Mario and likely Dr. Mario
         AirTransAngleSuperJumpPunch => {
             let stick_x = ControlModule::get_stick_x(boma);
             let dir = WorkModule::get_float(boma, *FIGHTER_STATUS_SUPER_JUMP_PUNCH_WORK_FLOAT_CONST_DIR_STICK_X);
